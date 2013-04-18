@@ -8,6 +8,7 @@ import com.example.helloworld.core.User;
 import com.example.helloworld.db.PersonDAO;
 import com.example.helloworld.health.TemplateHealthCheck;
 import com.example.helloworld.resources.*;
+import com.example.helloworld.resources.atmosphere.ChatResource;
 import com.yammer.dropwizard.Service;
 import com.yammer.dropwizard.assets.AssetsBundle;
 import com.yammer.dropwizard.auth.basic.BasicAuthProvider;
@@ -73,9 +74,11 @@ public class HelloWorldService extends Service<HelloWorldConfiguration> {
         environment.addHealthCheck(new TemplateHealthCheck(template));
         environment.addResource(new HelloWorldResource(template));
         environment.addResource(new ViewResource());
+        environment.addResource(new ChatHtmlPageResource());
         environment.addResource(new ProtectedResource());
         environment.addResource(new PeopleResource(dao));
         environment.addResource(new PersonResource(dao));
+        environment.addResource(new ChatResource());
 
         initializeAtmosphere(configuration, environment);
     }
