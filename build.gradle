@@ -1,0 +1,87 @@
+apply plugin: 'groovy'
+apply plugin: 'fatjar'
+apply plugin: 'application'
+apply plugin: 'project-report'
+
+// The main class of the application
+//mainClassName = 'com.example.helloworld.HelloWorldService'
+//dropWizardConfig = './src/dist/config/example.yml'
+mainClassName = 'com.bbw.ProductMongoService'
+dropWizardConfig = 'example.yml'
+
+// Use Java 7 by default
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+// Add Gradle FatJar Plugin, see https://github.com/musketyr/gradle-fatjar-plugin
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath group: 'eu.appsatori', name: 'gradle-fatjar-plugin', version: '0.1.3'
+    }
+}
+
+// Set our project variables
+project.ext {
+//    dropwizardVersion = '0.6.1'
+    dropwizardVersion = '0.7.0-SNAPSHOT'
+}
+
+repositories {
+    maven {
+        url "$System.env.HOME/.m2/repository"
+    }
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'com.yammer.dropwizard', name: 'dropwizard-core', version: dropwizardVersion
+    compile group: 'com.yammer.dropwizard', name: 'dropwizard-hibernate', version: dropwizardVersion
+    compile group: 'com.yammer.dropwizard', name: 'dropwizard-migrations', version: dropwizardVersion
+    compile group: 'com.yammer.dropwizard', name: 'dropwizard-auth', version: dropwizardVersion
+    compile group: 'com.yammer.dropwizard', name: 'dropwizard-views', version: dropwizardVersion
+    compile group: 'com.h2database', name: 'h2', version: '1.3.170'
+    compile group: 'com.google', name: 'bitcoinj', version: '0.7'
+    compile group: 'com.google.guava', name: 'guava', version: '12.0'
+    compile group: 'com.hmsonline', name: 'dropwizard-spring', version: '0.1.2-SNAPSHOT'
+    compile group: 'net.vz.mongodb.jackson', name: 'mongo-jackson-mapper', version: '1.4.0'
+    compile group: 'org.mozilla', name: 'rhino', version: '1.7R3'
+    compile group: 'org.atmosphere', name: 'atmosphere-jersey', version: '1.0.12'
+    compile group: 'org.eclipse.jetty', name: 'jetty-servlets', version: '8.1.10.v20130312'
+    compile group: 'org.eclipse.jetty', name: 'jetty-server', version: '8.1.10.v20130312'
+    compile group: 'org.eclipse.jetty', name: 'jetty-websocket', version: '8.1.10.v20130312'
+//    compile 'org.codehaus.jackson:jackson-core-asl:1.9.5' not found with latest jackson mapper
+
+    // this dependency is needed due to http://issues.gradle.org/browse/GRADLE-2647
+    compile "com.sun.jersey:jersey-client:1.15"
+    groovy group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.1.0'
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+    testCompile group: 'org.mockito', name: 'mockito-all', version: '1.9.5'
+    testCompile group: 'org.easytesting', name: 'fest-assert-core', version: '2.0M8'
+}
+
+// Configure the fatJar task
+fatJar {
+    classifier 'fat'
+
+    // We need to add the main class to the manifest, otherwise the JAR won't start.
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+
+    // We have to exclude signature files from the fat JAR, otherwise we'll get invalid signature file digest errors.
+    exclude 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/*.SF'
+}
+
+// Configure the run task to start the Dropwizard service
+
+run {
+    args 'server', dropWizardConfig
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.4'
+}
